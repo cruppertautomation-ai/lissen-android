@@ -23,6 +23,7 @@ data class LibraryItem(
 data class Media(
   val numChapters: Int?,
   val metadata: LibraryMetadata,
+  val tags: List<String>?,
 )
 
 @Keep
@@ -32,5 +33,4 @@ data class LibraryMetadata(
   val subtitle: String?,
   val seriesName: String?,
   val authorName: String?,
-  val tags: List<String>?,
 )

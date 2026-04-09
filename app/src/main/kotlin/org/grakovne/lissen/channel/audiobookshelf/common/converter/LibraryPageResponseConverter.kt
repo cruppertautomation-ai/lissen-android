@@ -22,7 +22,7 @@ class LibraryPageResponseConverter
             series = it.media.metadata.seriesName,
             subtitle = it.media.metadata.subtitle,
             author = it.media.metadata.authorName,
-            tags = it.media.metadata.tags ?: emptyList(),
+            tags = it.media.tags ?: emptyList(),
           )
         }.let {
           PagedItems(

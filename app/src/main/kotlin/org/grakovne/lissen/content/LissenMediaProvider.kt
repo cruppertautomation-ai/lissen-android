@@ -433,13 +433,25 @@ class LissenMediaProvider
 
     suspend fun fetchConnectionInfo() = providePreferredChannel().fetchConnectionInfo()
 
-    suspend fun fetchAvailableTags(libraryId: String): List<String> =
-      dataRepository
-        .fetchFilterData(libraryId)
+    suspend fun fetchAvailableTags(libraryId: String): List<String> {
+      val fromFilterData =
+        dataRepository
+          .fetchFilterData(libraryId)
+          .fold(
+            onSuccess = { it.tags ?: emptyList() },
+            onFailure = { emptyList() },
+          )
+
+      if (fromFilterData.isNotEmpty()) return fromFilterData
+
+      // Fallback: collect tags from items when filterdata cache is stale
+      return providePreferredChannel()
+        .fetchBooks(libraryId = libraryId, pageSize = 100, pageNumber = 0)
         .fold(
-          onSuccess = { it.tags ?: emptyList() },
+          onSuccess = { it.items.flatMap { book -> book.tags }.distinct() },
           onFailure = { emptyList() },
         )
+    }
 
     fun provideAuthService(): ChannelAuthService = channelProvider.provideChannelAuth()
 
