@@ -55,6 +55,22 @@ class CachingModelView
 
     private val _bookCachingProgress = mutableMapOf<String, MutableStateFlow<CacheState>>()
 
+    data class DownloadAllState(
+      val active: Boolean = false,
+      val total: Int = 0,
+      val scheduled: Int = 0,
+      val downloading: Int = 0,
+      val completed: Int = 0,
+      val failed: Int = 0,
+      val currentTitle: String? = null,
+    ) {
+      val progress: Float
+        get() = if (total > 0) completed.toFloat() / total else 0f
+    }
+
+    private val _downloadAllState = MutableStateFlow(DownloadAllState())
+    val downloadAllState = _downloadAllState
+
     private val pageConfig =
       PagingConfig(
         pageSize = PAGE_SIZE,
@@ -141,33 +157,63 @@ class CachingModelView
 
     fun downloadAll() {
       val libraryId = preferences.getPreferredLibrary()?.id ?: return
+      _downloadAllState.value = DownloadAllState(active = true)
+
       viewModelScope.launch {
         withContext(Dispatchers.IO) {
-          // Fetch all books from server
+          // Collect all book IDs first
+          val allBooks = mutableListOf<org.grakovne.lissen.lib.domain.Book>()
           var page = 0
           val pageSize = 50
           while (true) {
-            val result = mediaProvider.fetchBooks(libraryId, pageSize, page)
             val books =
-              result.fold(
+              mediaProvider.fetchBooks(libraryId, pageSize, page).fold(
                 onSuccess = { it.items },
                 onFailure = { emptyList() },
               )
             if (books.isEmpty()) break
-
-            for (book in books) {
-              // Fetch detailed item to get chapters for caching
-              val detailed =
-                mediaProvider.fetchBook(book.id).fold(
-                  onSuccess = { it },
-                  onFailure = { null },
-                ) ?: continue
-
-              cache(detailed, 0.0, AllItemsDownloadOption)
-            }
-
+            allBooks.addAll(books)
             page++
           }
+
+          _downloadAllState.value =
+            DownloadAllState(
+              active = true,
+              total = allBooks.size,
+              scheduled = allBooks.size,
+            )
+
+          for ((index, book) in allBooks.withIndex()) {
+            _downloadAllState.value =
+              _downloadAllState.value.copy(
+                scheduled = allBooks.size - index - 1,
+                downloading = 1,
+                currentTitle = book.title,
+              )
+
+            val detailed =
+              mediaProvider.fetchBook(book.id).fold(
+                onSuccess = { it },
+                onFailure = { null },
+              )
+
+            if (detailed != null) {
+              cache(detailed, 0.0, AllItemsDownloadOption)
+              _downloadAllState.value =
+                _downloadAllState.value.copy(
+                  completed = _downloadAllState.value.completed + 1,
+                  downloading = 0,
+                )
+            } else {
+              _downloadAllState.value =
+                _downloadAllState.value.copy(
+                  failed = _downloadAllState.value.failed + 1,
+                  downloading = 0,
+                )
+            }
+          }
+
+          _downloadAllState.value = _downloadAllState.value.copy(active = false, scheduled = 0, downloading = 0)
         }
       }
     }

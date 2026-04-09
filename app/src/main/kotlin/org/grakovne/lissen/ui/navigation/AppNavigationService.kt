@@ -48,6 +48,8 @@ class AppNavigationService(
 
   fun showAdvancedSettings() = host.navigate("$ROUTE_SETTINGS/advanced_settings")
 
+  fun showDownloadAll() = host.navigate("download_all")
+
   fun showLogin() {
     host.navigate(ROUTE_LOGIN) {
       val startId = host.graph.findStartDestination().id

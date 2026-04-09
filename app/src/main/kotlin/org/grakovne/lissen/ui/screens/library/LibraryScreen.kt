@@ -529,8 +529,9 @@ fun LibraryScreen(
         refreshContent(showPullRefreshing = false)
       },
       onDownloadAll = {
-        cachingModelView.downloadAll()
         preferencesExpanded = false
+        cachingModelView.downloadAll()
+        navController.showDownloadAll()
       },
     )
   }

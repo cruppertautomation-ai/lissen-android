@@ -23,6 +23,7 @@ import androidx.navigation.navArgument
 import coil3.ImageLoader
 import org.grakovne.lissen.common.NetworkService
 import org.grakovne.lissen.persistence.preferences.LissenSharedPreferences
+import org.grakovne.lissen.ui.screens.library.DownloadAllScreen
 import org.grakovne.lissen.ui.screens.library.LibraryScreen
 import org.grakovne.lissen.ui.screens.login.LoginScreen
 import org.grakovne.lissen.ui.screens.player.PlayerScreen
@@ -144,6 +145,22 @@ fun AppNavHost(
           navController = navigationService,
           imageLoader = imageLoader,
           networkService = networkService,
+        )
+      }
+
+      composable(
+        route = "download_all",
+        enterTransition = { enterTransition },
+        exitTransition = { exitTransition },
+        popEnterTransition = { popEnterTransition },
+        popExitTransition = { popExitTransition },
+      ) {
+        DownloadAllScreen(
+          onBack = {
+            if (navController.previousBackStackEntry != null) {
+              navController.popBackStack()
+            }
+          },
         )
       }
 
