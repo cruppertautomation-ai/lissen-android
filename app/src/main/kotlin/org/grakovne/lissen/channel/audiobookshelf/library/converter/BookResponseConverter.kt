@@ -105,6 +105,7 @@ class BookResponseConverter
             } ?: emptyList(),
         createdAt = item.addedAt,
         updatedAt = item.ctimeMs,
+        tags = item.media.metadata.tags ?: emptyList(),
         progress =
           progressResponse
             ?.let {

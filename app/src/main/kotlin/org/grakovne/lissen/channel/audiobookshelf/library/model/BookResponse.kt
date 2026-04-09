@@ -33,6 +33,7 @@ data class LibraryMetadataResponse(
   val description: String?,
   val publisher: String?,
   val publishedYear: String?,
+  val tags: List<String>?,
 )
 
 @Keep

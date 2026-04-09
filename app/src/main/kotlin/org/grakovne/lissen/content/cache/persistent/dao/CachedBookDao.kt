@@ -54,6 +54,7 @@ interface CachedBookDao {
             .let {
               adapter.toJson(it)
             },
+        tagsJson = tagsAdapter.toJson(book.tags),
       )
 
     val bookFiles =
@@ -233,5 +234,8 @@ interface CachedBookDao {
   companion object {
     val type = Types.newParameterizedType(List::class.java, BookSeriesDto::class.java)
     val adapter = moshi.adapter<List<BookSeriesDto>>(type)
+
+    private val tagsType = Types.newParameterizedType(List::class.java, String::class.java)
+    val tagsAdapter = moshi.adapter<List<String>>(tagsType)
   }
 }

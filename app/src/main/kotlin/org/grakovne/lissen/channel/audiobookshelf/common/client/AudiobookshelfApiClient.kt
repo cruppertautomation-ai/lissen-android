@@ -7,6 +7,7 @@ import org.grakovne.lissen.channel.audiobookshelf.common.model.bookmark.Bookmark
 import org.grakovne.lissen.channel.audiobookshelf.common.model.bookmark.BookmarksResponse
 import org.grakovne.lissen.channel.audiobookshelf.common.model.connection.ConnectionInfoResponse
 import org.grakovne.lissen.channel.audiobookshelf.common.model.metadata.AuthorItemsResponse
+import org.grakovne.lissen.channel.audiobookshelf.common.model.metadata.FilterDataResponse
 import org.grakovne.lissen.channel.audiobookshelf.common.model.metadata.LibraryResponse
 import org.grakovne.lissen.channel.audiobookshelf.common.model.playback.PlaybackSessionResponse
 import org.grakovne.lissen.channel.audiobookshelf.common.model.playback.PlaybackStartRequest
@@ -101,6 +102,11 @@ interface AudiobookshelfApiClient {
     @Query("q") request: String,
     @Query("limit") limit: Int,
   ): Response<PodcastSearchResponse>
+
+  @GET("api/libraries/{libraryId}/filterdata")
+  suspend fun fetchFilterData(
+    @Path("libraryId") libraryId: String,
+  ): Response<FilterDataResponse>
 
   @GET("api/items/{itemId}")
   suspend fun fetchLibraryItem(

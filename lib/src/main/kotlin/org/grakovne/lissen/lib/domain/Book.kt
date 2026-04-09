@@ -9,4 +9,5 @@ data class Book(
   val series: String?,
   val title: String,
   val author: String?,
+  val tags: List<String> = emptyList(),
 )

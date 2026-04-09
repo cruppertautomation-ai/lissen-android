@@ -90,6 +90,8 @@ class SettingsViewModel
     private val _hideCompleted = preferences.hideCompletedFlow
     val hideCompleted = _hideCompleted
 
+    val selectedTag = preferences.selectedTagFlow
+
     private val _autoDownloadDelayed = MutableLiveData(preferences.getAutoDownloadDelayed())
     val autoDownloadDelayed = _autoDownloadDelayed
 
@@ -113,6 +115,10 @@ class SettingsViewModel
         true -> preferences.saveHideCompleted(false)
         false -> preferences.saveHideCompleted(true)
       }
+    }
+
+    fun selectTag(tag: String?) {
+      preferences.saveSelectedTag(tag)
     }
 
     fun logout() {

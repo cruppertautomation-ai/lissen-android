@@ -23,6 +23,7 @@ data class DetailedItem(
   val localProvided: Boolean,
   val createdAt: Long,
   val updatedAt: Long,
+  val tags: List<String> = emptyList(),
 ) : Serializable
 
 @Keep

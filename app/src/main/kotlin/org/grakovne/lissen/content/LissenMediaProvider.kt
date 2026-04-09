@@ -2,6 +2,7 @@ package org.grakovne.lissen.content
 
 import android.net.Uri
 import org.grakovne.lissen.channel.audiobookshelf.AudiobookshelfChannelProvider
+import org.grakovne.lissen.channel.audiobookshelf.common.api.AudioBookshelfRepository
 import org.grakovne.lissen.channel.common.ChannelAuthService
 import org.grakovne.lissen.channel.common.MediaChannel
 import org.grakovne.lissen.channel.common.OperationError
@@ -33,6 +34,7 @@ class LissenMediaProvider
   constructor(
     private val preferences: LissenSharedPreferences,
     private val channelProvider: AudiobookshelfChannelProvider,
+    private val dataRepository: AudioBookshelfRepository,
     private val localCacheRepository: LocalCacheRepository,
     private val cachedCoverProvider: CachedCoverProvider,
     private val cachedBookmarkProvider: CachedBookmarkProvider,
@@ -430,6 +432,14 @@ class LissenMediaProvider
     fun fetchConnectionHost() = providePreferredChannel().fetchConnectionHost()
 
     suspend fun fetchConnectionInfo() = providePreferredChannel().fetchConnectionInfo()
+
+    suspend fun fetchAvailableTags(libraryId: String): List<String> =
+      dataRepository
+        .fetchFilterData(libraryId)
+        .fold(
+          onSuccess = { it.tags ?: emptyList() },
+          onFailure = { emptyList() },
+        )
 
     fun provideAuthService(): ChannelAuthService = channelProvider.provideChannelAuth()
 

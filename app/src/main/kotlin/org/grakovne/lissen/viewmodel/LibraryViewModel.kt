@@ -39,6 +39,9 @@ class LibraryViewModel
     private val _recentBooks = MutableLiveData<List<RecentBook>>(emptyList())
     val recentBooks: LiveData<List<RecentBook>> = _recentBooks
 
+    private val _availableTags = MutableLiveData<List<String>>(emptyList())
+    val availableTags: LiveData<List<String>> = _availableTags
+
     private val _recentBookUpdating = MutableLiveData(false)
     val recentBookUpdating: LiveData<Boolean> = _recentBookUpdating
 
@@ -141,6 +144,16 @@ class LibraryViewModel
             true -> searchPagingSource?.invalidate()
             else -> defaultPagingSource?.invalidate()
           }
+        }
+      }
+    }
+
+    fun fetchAvailableTags() {
+      val preferredLibrary = preferences.getPreferredLibrary()?.id ?: return
+      viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+          val tags = mediaChannel.fetchAvailableTags(preferredLibrary)
+          _availableTags.postValue(tags.sorted())
         }
       }
     }

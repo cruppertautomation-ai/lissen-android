@@ -227,6 +227,7 @@ fun LibraryScreen(
 
     playerViewModel.recoverMiniPlayer()
     settingsViewModel.fetchLibraries()
+    libraryViewModel.fetchAvailableTags()
 
     if (settingsViewModel.hasCredentials().not()) {
       navController.showLogin()
@@ -521,6 +522,10 @@ fun LibraryScreen(
       onHideCompletedToggled = {
         settingsViewModel.toggleHideCompleted()
         playerViewModel.book.value?.let { playerViewModel.preparePlayback(it.id) }
+        refreshContent(showPullRefreshing = false)
+      },
+      onTagSelected = { tag ->
+        settingsViewModel.selectTag(tag)
         refreshContent(showPullRefreshing = false)
       },
     )

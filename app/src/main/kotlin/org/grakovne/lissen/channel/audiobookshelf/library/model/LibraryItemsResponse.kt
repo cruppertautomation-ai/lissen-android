@@ -32,4 +32,5 @@ data class LibraryMetadata(
   val subtitle: String?,
   val seriesName: String?,
   val authorName: String?,
+  val tags: List<String>?,
 )

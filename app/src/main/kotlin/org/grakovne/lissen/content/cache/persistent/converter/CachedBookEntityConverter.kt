@@ -2,6 +2,7 @@ package org.grakovne.lissen.content.cache.persistent.converter
 
 import com.squareup.moshi.Types
 import org.grakovne.lissen.common.moshi
+import org.grakovne.lissen.content.cache.persistent.dao.CachedBookDao
 import org.grakovne.lissen.content.cache.persistent.entity.BookEntity
 import org.grakovne.lissen.content.cache.persistent.entity.BookSeriesDto
 import org.grakovne.lissen.lib.domain.Book
@@ -33,5 +34,6 @@ class CachedBookEntityConverter
                   ?.let { append(" #$it") }
               }
             },
+        tags = CachedBookDao.tagsAdapter.fromJson(entity.tagsJson) ?: emptyList(),
       )
   }

@@ -453,6 +453,19 @@ class LissenSharedPreferences
         putBoolean(KEY_HIDE_COMPLETED, value)
       }
 
+    fun getSelectedTag(): String? = sharedPreferences.getString(KEY_SELECTED_TAG, null)
+
+    fun saveSelectedTag(tag: String?) =
+      sharedPreferences.edit {
+        if (tag != null) {
+          putString(KEY_SELECTED_TAG, tag)
+        } else {
+          remove(KEY_SELECTED_TAG)
+        }
+      }
+
+    val selectedTagFlow = asFlow(KEY_SELECTED_TAG, ::getSelectedTag)
+
     companion object {
       private const val KEY_ALIAS = "secure_key_alias"
       private const val KEY_HOST = "host"
@@ -482,6 +495,7 @@ class LissenSharedPreferences
       private const val KEY_PREFERRED_LIBRARY_ORDERING = "preferred_library_ordering"
       private const val KEY_SOFTWARE_CODECS = "software_codecs"
       private const val KEY_HIDE_COMPLETED = "hide_completed"
+      private const val KEY_SELECTED_TAG = "selected_tag"
 
       private const val KEY_CUSTOM_HEADERS = "custom_headers"
       private const val KEY_BYPASS_SSL = "bypass_ssl"
