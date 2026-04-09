@@ -530,7 +530,6 @@ fun LibraryScreen(
       },
       onDownloadAll = {
         preferencesExpanded = false
-        cachingModelView.downloadAll()
         navController.showDownloadAll()
       },
     )

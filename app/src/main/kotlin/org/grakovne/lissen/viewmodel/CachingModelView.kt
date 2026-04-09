@@ -33,6 +33,7 @@ import org.grakovne.lissen.lib.domain.DownloadOption
 import org.grakovne.lissen.lib.domain.PlayingChapter
 import org.grakovne.lissen.persistence.preferences.LissenSharedPreferences
 import org.grakovne.lissen.ui.screens.settings.advanced.cache.CachedItemsPageSource
+import timber.log.Timber
 import java.io.Serializable
 import javax.inject.Inject
 
@@ -157,7 +158,12 @@ class CachingModelView
     }
 
     fun downloadAll() {
-      val libraryId = preferences.getPreferredLibrary()?.id ?: return
+      Timber.d("DownloadAll: triggered, preferredLibrary=${preferences.getPreferredLibrary()}")
+      val libraryId =
+        preferences.getPreferredLibrary()?.id ?: run {
+          Timber.e("DownloadAll: no preferred library, aborting")
+          return
+        }
       _downloadAllState.value = DownloadAllState(active = true)
 
       viewModelScope.launch {
@@ -177,17 +183,26 @@ class CachingModelView
             page++
           }
 
+          Timber.d("DownloadAll: fetched ${allBooks.size} books from server")
+
           // Check which books are already cached
           val cachedBookIds =
             localCacheRepository
               .fetchDetailedItems()
               .fold(
-                onSuccess = { it.items.map { item -> item.id }.toSet() },
-                onFailure = { emptySet() },
+                onSuccess = { items ->
+                  Timber.d("DownloadAll: ${items.items.size} items in local cache")
+                  items.items.map { item -> item.id }.toSet()
+                },
+                onFailure = { error ->
+                  Timber.e("DownloadAll: fetchDetailedItems failed: $error")
+                  emptySet()
+                },
               )
 
           val alreadyCached = allBooks.count { it.id in cachedBookIds }
           val toDownload = allBooks.filter { it.id !in cachedBookIds }
+          Timber.d("DownloadAll: $alreadyCached cached, ${toDownload.size} to download")
 
           _downloadAllState.value =
             DownloadAllState(
@@ -228,6 +243,7 @@ class CachingModelView
           }
 
           _downloadAllState.value = _downloadAllState.value.copy(active = false, scheduled = 0, downloading = 0)
+          Timber.d("DownloadAll: finished. State: ${_downloadAllState.value}")
         }
       }
     }
