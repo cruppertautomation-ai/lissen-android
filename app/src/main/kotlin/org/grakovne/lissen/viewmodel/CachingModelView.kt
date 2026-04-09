@@ -58,6 +58,7 @@ class CachingModelView
     data class DownloadAllState(
       val active: Boolean = false,
       val total: Int = 0,
+      val alreadyCached: Int = 0,
       val scheduled: Int = 0,
       val downloading: Int = 0,
       val completed: Int = 0,
@@ -65,7 +66,7 @@ class CachingModelView
       val currentTitle: String? = null,
     ) {
       val progress: Float
-        get() = if (total > 0) completed.toFloat() / total else 0f
+        get() = if (total > 0) (alreadyCached + completed).toFloat() / total else 0f
     }
 
     private val _downloadAllState = MutableStateFlow(DownloadAllState())
@@ -176,17 +177,30 @@ class CachingModelView
             page++
           }
 
+          // Check which books are already cached
+          val cachedBookIds =
+            localCacheRepository
+              .fetchDetailedItems()
+              .fold(
+                onSuccess = { it.items.map { item -> item.id }.toSet() },
+                onFailure = { emptySet() },
+              )
+
+          val alreadyCached = allBooks.count { it.id in cachedBookIds }
+          val toDownload = allBooks.filter { it.id !in cachedBookIds }
+
           _downloadAllState.value =
             DownloadAllState(
               active = true,
               total = allBooks.size,
-              scheduled = allBooks.size,
+              alreadyCached = alreadyCached,
+              scheduled = toDownload.size,
             )
 
-          for ((index, book) in allBooks.withIndex()) {
+          for ((index, book) in toDownload.withIndex()) {
             _downloadAllState.value =
               _downloadAllState.value.copy(
-                scheduled = allBooks.size - index - 1,
+                scheduled = toDownload.size - index - 1,
                 downloading = 1,
                 currentTitle = book.title,
               )

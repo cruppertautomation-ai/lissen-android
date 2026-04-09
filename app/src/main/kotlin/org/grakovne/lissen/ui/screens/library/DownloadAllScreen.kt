@@ -73,7 +73,7 @@ fun DownloadAllScreen(
         )
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
           Text(
-            text = "${state.completed}/${state.total}",
+            text = "${state.alreadyCached + state.completed}/${state.total}",
             style = typography.headlineMedium,
           )
           if (state.active) {
@@ -111,6 +111,7 @@ fun DownloadAllScreen(
         verticalArrangement = Arrangement.spacedBy(8.dp),
       ) {
         DownloadStatRow("Total", state.total)
+        DownloadStatRow("Already cached", state.alreadyCached)
         DownloadStatRow("Queued", state.scheduled)
         DownloadStatRow("Downloading", state.downloading)
         DownloadStatRow("Completed", state.completed)
