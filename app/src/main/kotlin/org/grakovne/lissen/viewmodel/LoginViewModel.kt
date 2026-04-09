@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import org.grakovne.lissen.BuildConfig
 import org.grakovne.lissen.channel.common.AuthMethod
 import org.grakovne.lissen.channel.common.OperationError
 import org.grakovne.lissen.channel.common.OperationError.MissingCredentialsHost
@@ -24,13 +25,13 @@ class LoginViewModel
     preferences: LissenSharedPreferences,
     private val mediaChannel: LissenMediaProvider,
   ) : ViewModel() {
-    private val _host = MutableLiveData(preferences.getHost() ?: "")
+    private val _host = MutableLiveData(preferences.getHost() ?: DEFAULT_HOST)
     val host = _host
 
-    private val _username = MutableLiveData(preferences.getUsername() ?: "")
+    private val _username = MutableLiveData(preferences.getUsername() ?: DEFAULT_USERNAME)
     val username = _username
 
-    private val _password = MutableLiveData("")
+    private val _password = MutableLiveData(DEFAULT_PASSWORD)
     val password = _password
 
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Idle)
@@ -41,6 +42,12 @@ class LoginViewModel
 
     private val _customOAuthLoginButtonText = MutableLiveData<String?>()
     val customOAuthLoginButtonText = _customOAuthLoginButtonText
+
+    init {
+      if (!preferences.hasCredentials() && DEFAULT_HOST.isNotEmpty()) {
+        login()
+      }
+    }
 
     fun updateAuthData() {
       viewModelScope
@@ -147,5 +154,11 @@ class LoginViewModel
       data class Error(
         val message: OperationError,
       ) : LoginState()
+    }
+
+    companion object {
+      private val DEFAULT_HOST = BuildConfig.DEFAULT_HOST.ifEmpty { "" }
+      private val DEFAULT_USERNAME = BuildConfig.DEFAULT_USERNAME.ifEmpty { "" }
+      private val DEFAULT_PASSWORD = BuildConfig.DEFAULT_PASSWORD.ifEmpty { "" }
     }
   }

@@ -57,6 +57,9 @@ android {
     versionName = "1.9.4-$commitHash"
     
     buildConfigField("String", "GIT_HASH", "\"$commitHash\"")
+    buildConfigField("String", "DEFAULT_HOST", "\"${localProperties.getProperty("alexandria.host", "")}\"")
+    buildConfigField("String", "DEFAULT_USERNAME", "\"${localProperties.getProperty("alexandria.username", "")}\"")
+    buildConfigField("String", "DEFAULT_PASSWORD", "\"${localProperties.getProperty("alexandria.password", "")}\"")
     
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     
