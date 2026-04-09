@@ -191,10 +191,9 @@ fun LibraryScreen(
   val context = LocalContext.current
 
   fun isRecentVisible(): Boolean {
-    val fetchAvailable = networkService.isNetworkAvailable() || cachingModelView.localCacheUsing()
     val hasContent = recentBooks.isEmpty().not()
 
-    return searchRequested.not() && hasContent && fetchAvailable
+    return searchRequested.not() && hasContent
   }
 
   val showScrollbar by remember {

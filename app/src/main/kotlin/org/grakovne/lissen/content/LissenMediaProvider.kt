@@ -119,10 +119,21 @@ class LissenMediaProvider
         }
 
         false -> {
-          cachedCoverProvider.provideCover(
-            channel = providePreferredChannel(),
-            itemId = bookId,
-          )
+          val result =
+            cachedCoverProvider.provideCover(
+              channel = providePreferredChannel(),
+              itemId = bookId,
+            )
+          when (result) {
+            is OperationResult.Success -> {
+              result
+            }
+
+            is OperationResult.Error -> {
+              Timber.d("API fetchBookCover failed, falling back to local cache")
+              localCacheRepository.fetchBookCover(bookId)
+            }
+          }
         }
       }
     }
@@ -140,12 +151,23 @@ class LissenMediaProvider
         }
 
         false -> {
-          providePreferredChannel()
-            .searchBooks(
-              libraryId = libraryId,
-              query = query,
-              limit = limit,
-            )
+          val result =
+            providePreferredChannel()
+              .searchBooks(
+                libraryId = libraryId,
+                query = query,
+                limit = limit,
+              )
+          when (result) {
+            is OperationResult.Success -> {
+              result
+            }
+
+            is OperationResult.Error -> {
+              Timber.d("API searchBooks failed, falling back to local cache")
+              localCacheRepository.searchBooks(libraryId = libraryId, query = query)
+            }
+          }
         }
       }
     }
@@ -158,8 +180,23 @@ class LissenMediaProvider
       Timber.d("Fetching page $pageNumber of library: $libraryId")
 
       return when (preferences.isForceCache()) {
-        true -> localCacheRepository.fetchBooks(libraryId = libraryId, pageSize = pageSize, pageNumber = pageNumber)
-        false -> providePreferredChannel().fetchBooks(libraryId = libraryId, pageSize = pageSize, pageNumber = pageNumber)
+        true -> {
+          localCacheRepository.fetchBooks(libraryId = libraryId, pageSize = pageSize, pageNumber = pageNumber)
+        }
+
+        false -> {
+          val result = providePreferredChannel().fetchBooks(libraryId = libraryId, pageSize = pageSize, pageNumber = pageNumber)
+          when (result) {
+            is OperationResult.Success -> {
+              result
+            }
+
+            is OperationResult.Error -> {
+              Timber.d("API fetchBooks failed, falling back to local cache")
+              localCacheRepository.fetchBooks(libraryId = libraryId, pageSize = pageSize, pageNumber = pageNumber)
+            }
+          }
+        }
       }
     }
 
@@ -172,14 +209,17 @@ class LissenMediaProvider
         }
 
         false -> {
-          providePreferredChannel()
-            .fetchLibraries()
-            .also {
-              it.foldAsync(
-                onSuccess = { libraries -> localCacheRepository.updateLibraries(libraries) },
-                onFailure = {},
-              )
-            }
+          val result = providePreferredChannel().fetchLibraries()
+          result.foldAsync(
+            onSuccess = { libraries ->
+              localCacheRepository.updateLibraries(libraries)
+              OperationResult.Success(libraries)
+            },
+            onFailure = {
+              Timber.d("API fetchLibraries failed, falling back to local cache")
+              localCacheRepository.fetchLibraries()
+            },
+          )
         }
       }
     }
@@ -217,9 +257,17 @@ class LissenMediaProvider
         }
 
         false -> {
-          providePreferredChannel()
-            .fetchRecentListenedBooks(libraryId)
-            .map { items -> syncFromLocalProgress(libraryId = libraryId, detailedItems = items) }
+          val result = providePreferredChannel().fetchRecentListenedBooks(libraryId)
+          when (result) {
+            is OperationResult.Success -> {
+              result.map { items -> syncFromLocalProgress(libraryId = libraryId, detailedItems = items) }
+            }
+
+            is OperationResult.Error -> {
+              Timber.d("API fetchRecentListenedBooks failed, falling back to local cache")
+              localCacheRepository.fetchRecentListenedBooks(libraryId)
+            }
+          }
         }
       }
     }
@@ -236,9 +284,20 @@ class LissenMediaProvider
         }
 
         false -> {
-          providePreferredChannel()
-            .fetchBook(bookId)
-            .map { syncFromLocalProgress(it) }
+          val result = providePreferredChannel().fetchBook(bookId)
+          when (result) {
+            is OperationResult.Success -> {
+              result.map { syncFromLocalProgress(it) }
+            }
+
+            is OperationResult.Error -> {
+              Timber.d("API fetchBook failed, falling back to local cache")
+              localCacheRepository
+                .fetchBook(bookId)
+                ?.let { OperationResult.Success(it) }
+                ?: OperationResult.Error(OperationError.InternalError)
+            }
+          }
         }
       }
     }
