@@ -18,12 +18,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.grakovne.lissen.content.LissenMediaProvider
 import org.grakovne.lissen.content.cache.persistent.CacheState
 import org.grakovne.lissen.content.cache.persistent.ContentCachingManager
 import org.grakovne.lissen.content.cache.persistent.ContentCachingProgress
 import org.grakovne.lissen.content.cache.persistent.ContentCachingService
 import org.grakovne.lissen.content.cache.persistent.LocalCacheRepository
 import org.grakovne.lissen.content.cache.temporary.CachedCoverProvider
+import org.grakovne.lissen.lib.domain.AllItemsDownloadOption
 import org.grakovne.lissen.lib.domain.CacheStatus
 import org.grakovne.lissen.lib.domain.ContentCachingTask
 import org.grakovne.lissen.lib.domain.DetailedItem
@@ -40,6 +42,7 @@ class CachingModelView
   constructor(
     @ApplicationContext private val context: Context,
     private val localCacheRepository: LocalCacheRepository,
+    private val mediaProvider: LissenMediaProvider,
     private val contentCachingProgress: ContentCachingProgress,
     private val contentCachingManager: ContentCachingManager,
     private val preferences: LissenSharedPreferences,
@@ -134,6 +137,39 @@ class CachingModelView
       chapter: PlayingChapter,
     ) {
       contentCachingManager.dropCache(item, chapter)
+    }
+
+    fun downloadAll() {
+      val libraryId = preferences.getPreferredLibrary()?.id ?: return
+      viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+          // Fetch all books from server
+          var page = 0
+          val pageSize = 50
+          while (true) {
+            val result = mediaProvider.fetchBooks(libraryId, pageSize, page)
+            val books =
+              result.fold(
+                onSuccess = { it.items },
+                onFailure = { emptyList() },
+              )
+            if (books.isEmpty()) break
+
+            for (book in books) {
+              // Fetch detailed item to get chapters for caching
+              val detailed =
+                mediaProvider.fetchBook(book.id).fold(
+                  onSuccess = { it },
+                  onFailure = { null },
+                ) ?: continue
+
+              cache(detailed, 0.0, AllItemsDownloadOption)
+            }
+
+            page++
+          }
+        }
+      }
     }
 
     fun toggleCacheForce() {

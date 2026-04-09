@@ -6,8 +6,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowForwardIos
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,6 +25,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -46,6 +50,7 @@ fun LibrarySettingsComposable(
   onForceLocalToggled: () -> Unit,
   onHideCompletedToggled: () -> Unit,
   onTagSelected: (String?) -> Unit,
+  onDownloadAll: () -> Unit,
   navController: AppNavigationService,
   settingsModelView: SettingsViewModel = hiltViewModel(),
   libraryViewModel: LibraryViewModel = hiltViewModel(),
@@ -96,7 +101,11 @@ fun LibrarySettingsComposable(
               FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth(),
+                modifier =
+                  Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 160.dp)
+                    .verticalScroll(rememberScrollState()),
               ) {
                 availableTags.forEach { tag ->
                   FilterChip(
@@ -116,6 +125,21 @@ fun LibrarySettingsComposable(
             }
 
             HorizontalDivider(modifier = Modifier.padding(top = 8.dp))
+
+            ListItem(
+              modifier =
+                Modifier
+                  .fillMaxWidth()
+                  .clickable { onDownloadAll() },
+              headlineContent = {
+                Text(
+                  text = "Download all books",
+                  style = typography.bodyLarge,
+                )
+              },
+            )
+
+            HorizontalDivider()
 
             ApplicationSettingsItemComposable(
               onClicked = {

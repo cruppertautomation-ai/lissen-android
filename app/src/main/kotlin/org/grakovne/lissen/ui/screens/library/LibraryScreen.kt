@@ -528,6 +528,10 @@ fun LibraryScreen(
         settingsViewModel.selectTag(tag)
         refreshContent(showPullRefreshing = false)
       },
+      onDownloadAll = {
+        cachingModelView.downloadAll()
+        preferencesExpanded = false
+      },
     )
   }
 }
